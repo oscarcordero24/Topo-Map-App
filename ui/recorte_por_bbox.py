@@ -1,45 +1,65 @@
-import streamlit as st
+import tkinter as tk
+from tkinter import ttk
 
 from backend.errors import TopoAppError
 from backend.raster_ops import recortar_raster_por_bbox
+from ui.widgets import fila_coordenadas, mostrar_error, mostrar_resultado, selector_archivo, selector_guardar
 
 
-def render():
-    st.header("Recortar raster por coordenadas (bounding box)")
-    st.caption(
-        "Ingresa dos puntos (lat/lon) que formen las esquinas opuestas de un rectángulo "
-        "para recortar el raster a esa área."
-    )
+class RecorteBboxFrame(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, padding=10)
 
-    ruta_raster = st.text_input("Ruta del raster de entrada (GeoTIFF)", key="bbox_raster")
+        ttk.Label(
+            self,
+            text=(
+                "Ingresa dos puntos (lat/lon) que formen las esquinas opuestas de un rectángulo "
+                "para recortar el raster a esa área."
+            ),
+            font=("", 10, "italic"),
+            wraplength=1000,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 8))
 
-    st.markdown("**Punto 1 (una esquina)**")
-    c1, c2 = st.columns(2)
-    lat1 = c1.number_input("Latitud 1", value=0.0, format="%.6f", key="bbox_lat1")
-    lon1 = c2.number_input("Longitud 1", value=0.0, format="%.6f", key="bbox_lon1")
-
-    st.markdown("**Punto 2 (esquina opuesta)**")
-    c3, c4 = st.columns(2)
-    lat2 = c3.number_input("Latitud 2", value=0.0, format="%.6f", key="bbox_lat2")
-    lon2 = c4.number_input("Longitud 2", value=0.0, format="%.6f", key="bbox_lon2")
-
-    ruta_salida = st.text_input("Ruta de salida para el raster recortado (.tif)", key="bbox_salida")
-    sobrescribir = st.checkbox("Sobrescribir si el archivo de salida ya existe", key="bbox_sobrescribir")
-
-    if not st.button("Recortar raster", key="bbox_boton"):
-        return
-
-    try:
-        resultado = recortar_raster_por_bbox(
-            ruta_raster, (lat1, lon1), (lat2, lon2), ruta_salida, sobrescribir
+        frame_raster, self.raster_var = selector_archivo(
+            self, "Raster de entrada (GeoTIFF):", [("GeoTIFF", "*.tif *.tiff"), ("Todos", "*.*")]
         )
-    except TopoAppError as e:
-        st.error(str(e))
-        return
-    except Exception:
-        st.error("Ocurrió un error inesperado al recortar el raster.")
-        return
+        frame_raster.pack(fill="x", pady=4)
 
-    if resultado.advertencia:
-        st.warning(resultado.advertencia)
-    st.success(f"Raster recortado guardado en: {resultado.ruta_salida}")
+        self.lat1_var, self.lon1_var = fila_coordenadas(self, "Punto 1 (una esquina)")
+        self.lat2_var, self.lon2_var = fila_coordenadas(self, "Punto 2 (esquina opuesta)")
+
+        frame_salida, self.salida_var = selector_guardar(
+            self, "Guardar raster recortado como:", ".tif", [("GeoTIFF", "*.tif")]
+        )
+        frame_salida.pack(fill="x", pady=(10, 4))
+
+        self.sobrescribir_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            self, text="Sobrescribir si el archivo de salida ya existe", variable=self.sobrescribir_var
+        ).pack(anchor="w", pady=4)
+
+        ttk.Button(self, text="Recortar raster", command=self._recortar).pack(anchor="w", pady=10)
+
+    def _recortar(self):
+        try:
+            lat1 = float(self.lat1_var.get())
+            lon1 = float(self.lon1_var.get())
+            lat2 = float(self.lat2_var.get())
+            lon2 = float(self.lon2_var.get())
+        except ValueError:
+            mostrar_error("Las coordenadas deben ser números válidos.")
+            return
+
+        try:
+            resultado = recortar_raster_por_bbox(
+                self.raster_var.get(), (lat1, lon1), (lat2, lon2), self.salida_var.get(), self.sobrescribir_var.get()
+            )
+        except TopoAppError as e:
+            mostrar_error(str(e))
+            return
+        except Exception:
+            mostrar_error("Ocurrió un error inesperado al recortar el raster.")
+            return
+
+        mostrar_resultado(resultado, f"Raster recortado guardado en:\n{resultado.ruta_salida}")

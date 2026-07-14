@@ -41,8 +41,11 @@ salida y nunca sobrescriben un archivo existente sin confirmación.
   lectura, escritura y geometría de shapefiles.
 - [pyproj](https://pyproj4.github.io/pyproj/) — manejo de sistemas de
   coordenadas (CRS), usado internamente por geopandas/rasterio.
-- [Streamlit](https://streamlit.io/) — interfaz de usuario local.
-- [Matplotlib](https://matplotlib.org/) — vistas previas de raster/vector.
+- [Tkinter](https://docs.python.org/3/library/tkinter.html) — interfaz de
+  usuario de escritorio (viene incluido con Python, no requiere instalación
+  aparte salvo en Linux, ver más abajo).
+- [Matplotlib](https://matplotlib.org/) — vistas previas de raster/vector
+  embebidas en la ventana.
 
 ## Instalación
 
@@ -71,28 +74,38 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+En Linux, Tkinter no siempre viene incluido con Python y hay que instalar el
+paquete de sistema aparte (no vía pip):
+
+```bash
+sudo apt install python3-tk    # Debian/Ubuntu
+```
+
+En Windows y macOS, el instalador oficial de python.org ya incluye Tkinter.
+
 ## Cómo correr la app
 
 ```bash
-streamlit run app.py
+python app.py
 ```
 
-Esto abre la app en el navegador (`http://localhost:8501`), corriendo en
-local. Como es una herramienta interna, se le indican rutas de archivos que
-existen en el disco de quien la usa (no hay subida a ningún servidor).
+Esto abre la ventana de escritorio de la app directamente en el equipo local.
+Como es una herramienta interna, se le indican rutas de archivos que existen
+en el disco de quien la usa (no hay subida a ningún servidor).
 
 ## Estructura del proyecto
 
 ```
 Topo-Map-App/
-├── app.py              # Punto de entrada de Streamlit (arma las 6 pestañas)
-├── backend/             # Lógica pura, sin dependencia de Streamlit
+├── app.py              # Punto de entrada de Tkinter (arma las 6 pestañas)
+├── backend/             # Lógica pura, sin dependencia de la interfaz
 │   ├── errors.py         # TopoAppError: errores con mensaje en español
 │   ├── models.py         # Dataclasses de resultados (InfoRaster, InfoVector, ...)
 │   ├── utils.py           # Validaciones compartidas de rutas de entrada/salida
 │   ├── raster_ops.py      # Cargar, recortar por shapefile, recortar por bbox
 │   └── vector_ops.py       # Cargar, crear, editar atributos, buffer de geometría
-├── ui/                   # Capa de Streamlit, un módulo por pestaña
+├── ui/                   # Capa de Tkinter, un módulo por pestaña
+│   ├── widgets.py          # Helpers compartidos (selectores de archivo, diálogos)
 │   ├── ver_raster.py
 │   ├── ver_shapefile.py
 │   ├── recorte_por_shapefile.py

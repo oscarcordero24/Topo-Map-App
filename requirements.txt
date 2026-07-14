@@ -1,4 +1,3 @@
-streamlit>=1.32
 rasterio>=1.3
 geopandas>=0.14
 shapely>=2.0

@@ -38,7 +38,7 @@ def cargar_info_shapefile(ruta: str) -> InfoVector:
         tipo_geometria=tipos_geometria,
         num_features=len(gdf),
         atributos=gdf.drop(columns="geometry").reset_index(drop=True),
-        bounds=tuple(gdf.total_bounds),
+        bounds=tuple(float(valor) for valor in gdf.total_bounds),
     )
 
 

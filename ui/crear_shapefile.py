@@ -1,48 +1,81 @@
-import streamlit as st
+import tkinter as tk
+from tkinter import ttk
 
 from backend.errors import TopoAppError
 from backend.vector_ops import crear_shapefile_rectangulo
+from ui.widgets import fila_coordenadas, mostrar_error, mostrar_resultado, selector_guardar
 
 
-def render():
-    st.header("Crear shapefile (rectángulo)")
-    st.caption(
-        "Crea un shapefile de un solo polígono rectangular a partir de dos puntos (lat/lon) "
-        "y un campo de atributo de texto."
-    )
+class CrearShapefileFrame(ttk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent, padding=10)
 
-    st.markdown("**Punto 1 (una esquina)**")
-    c1, c2 = st.columns(2)
-    lat1 = c1.number_input("Latitud 1", value=0.0, format="%.6f", key="crear_lat1")
-    lon1 = c2.number_input("Longitud 1", value=0.0, format="%.6f", key="crear_lon1")
+        ttk.Label(
+            self,
+            text=(
+                "Crea un shapefile de un solo polígono rectangular a partir de dos puntos (lat/lon) "
+                "y un campo de atributo de texto."
+            ),
+            font=("", 10, "italic"),
+            wraplength=1000,
+            justify="left",
+        ).pack(anchor="w", pady=(0, 8))
 
-    st.markdown("**Punto 2 (esquina opuesta)**")
-    c3, c4 = st.columns(2)
-    lat2 = c3.number_input("Latitud 2", value=0.0, format="%.6f", key="crear_lat2")
-    lon2 = c4.number_input("Longitud 2", value=0.0, format="%.6f", key="crear_lon2")
+        self.lat1_var, self.lon1_var = fila_coordenadas(self, "Punto 1 (una esquina)")
+        self.lat2_var, self.lon2_var = fila_coordenadas(self, "Punto 2 (esquina opuesta)")
 
-    crs = st.text_input("CRS de las coordenadas ingresadas", value="EPSG:4326", key="crear_crs")
+        fila_crs = ttk.Frame(self)
+        fila_crs.pack(fill="x", pady=(10, 4))
+        ttk.Label(fila_crs, text="CRS de las coordenadas ingresadas:", width=28, anchor="w").pack(side="left")
+        self.crs_var = tk.StringVar(value="EPSG:4326")
+        ttk.Entry(fila_crs, textvariable=self.crs_var, width=20).pack(side="left", padx=4)
 
-    st.markdown("**Atributo**")
-    c5, c6 = st.columns(2)
-    nombre_campo = c5.text_input("Nombre del campo", value="nombre", key="crear_campo_nombre")
-    valor_campo = c6.text_input("Valor / descripción", key="crear_campo_valor")
+        fila_campo = ttk.Frame(self)
+        fila_campo.pack(fill="x", pady=4)
+        ttk.Label(fila_campo, text="Nombre del campo:").pack(side="left")
+        self.nombre_campo_var = tk.StringVar(value="nombre")
+        ttk.Entry(fila_campo, textvariable=self.nombre_campo_var, width=20).pack(side="left", padx=(4, 16))
+        ttk.Label(fila_campo, text="Valor / descripción:").pack(side="left")
+        self.valor_campo_var = tk.StringVar()
+        ttk.Entry(fila_campo, textvariable=self.valor_campo_var, width=30).pack(side="left", padx=4)
 
-    ruta_salida = st.text_input("Ruta de salida para el shapefile (.shp)", key="crear_salida")
-    sobrescribir = st.checkbox("Sobrescribir si el archivo de salida ya existe", key="crear_sobrescribir")
-
-    if not st.button("Crear shapefile", key="crear_boton"):
-        return
-
-    try:
-        resultado = crear_shapefile_rectangulo(
-            (lat1, lon1), (lat2, lon2), nombre_campo, valor_campo, ruta_salida, sobrescribir, crs
+        frame_salida, self.salida_var = selector_guardar(
+            self, "Guardar shapefile como:", ".shp", [("Shapefile", "*.shp")]
         )
-    except TopoAppError as e:
-        st.error(str(e))
-        return
-    except Exception:
-        st.error("Ocurrió un error inesperado al crear el shapefile.")
-        return
+        frame_salida.pack(fill="x", pady=4)
 
-    st.success(f"Shapefile creado en: {resultado.ruta_salida}")
+        self.sobrescribir_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(
+            self, text="Sobrescribir si el archivo de salida ya existe", variable=self.sobrescribir_var
+        ).pack(anchor="w", pady=4)
+
+        ttk.Button(self, text="Crear shapefile", command=self._crear).pack(anchor="w", pady=10)
+
+    def _crear(self):
+        try:
+            lat1 = float(self.lat1_var.get())
+            lon1 = float(self.lon1_var.get())
+            lat2 = float(self.lat2_var.get())
+            lon2 = float(self.lon2_var.get())
+        except ValueError:
+            mostrar_error("Las coordenadas deben ser números válidos.")
+            return
+
+        try:
+            resultado = crear_shapefile_rectangulo(
+                (lat1, lon1),
+                (lat2, lon2),
+                self.nombre_campo_var.get(),
+                self.valor_campo_var.get(),
+                self.salida_var.get(),
+                self.sobrescribir_var.get(),
+                self.crs_var.get(),
+            )
+        except TopoAppError as e:
+            mostrar_error(str(e))
+            return
+        except Exception:
+            mostrar_error("Ocurrió un error inesperado al crear el shapefile.")
+            return
+
+        mostrar_resultado(resultado, f"Shapefile creado en:\n{resultado.ruta_salida}")

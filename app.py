@@ -1,4 +1,5 @@
-import streamlit as st
+import tkinter as tk
+from tkinter import ttk
 
 from ui import (
     crear_shapefile,
@@ -9,34 +10,41 @@ from ui import (
     ver_shapefile,
 )
 
-st.set_page_config(page_title="Topo Frames — Preparación de datos", layout="wide")
 
-st.title("Topo Frames — Herramienta de preparación de datos geoespaciales")
-st.caption(
-    "Herramienta interna para inspeccionar, recortar y editar rasters (DEM) y shapefiles "
-    "antes de pasarlos al motor de renderizado de mapas."
-)
+def main():
+    root = tk.Tk()
+    root.title("Topo Frames — Preparación de datos geoespaciales")
+    root.geometry("1150x780")
 
-tabs = st.tabs(
-    [
-        "1. Ver raster",
-        "2. Ver shapefile",
-        "3. Recortar por shapefile",
-        "4. Recortar por coordenadas",
-        "5. Crear shapefile",
-        "6. Editar shapefile",
+    ttk.Label(
+        root,
+        text=(
+            "Herramienta interna para inspeccionar, recortar y editar rasters (DEM) y shapefiles "
+            "antes de pasarlos al motor de renderizado de mapas."
+        ),
+        wraplength=1100,
+        justify="left",
+        padding=(10, 10),
+    ).pack(fill="x")
+
+    notebook = ttk.Notebook(root)
+    notebook.pack(fill="both", expand=True, padx=10, pady=10)
+
+    pestanas = [
+        ("1. Ver raster", ver_raster.VerRasterFrame),
+        ("2. Ver shapefile", ver_shapefile.VerShapefileFrame),
+        ("3. Recortar por shapefile", recorte_por_shapefile.RecorteShapefileFrame),
+        ("4. Recortar por coordenadas", recorte_por_bbox.RecorteBboxFrame),
+        ("5. Crear shapefile", crear_shapefile.CrearShapefileFrame),
+        ("6. Editar shapefile", editar_shapefile.EditarShapefileFrame),
     ]
-)
 
-with tabs[0]:
-    ver_raster.render()
-with tabs[1]:
-    ver_shapefile.render()
-with tabs[2]:
-    recorte_por_shapefile.render()
-with tabs[3]:
-    recorte_por_bbox.render()
-with tabs[4]:
-    crear_shapefile.render()
-with tabs[5]:
-    editar_shapefile.render()
+    for titulo, clase_frame in pestanas:
+        pestana = clase_frame(notebook)
+        notebook.add(pestana, text=titulo)
+
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    main()
