@@ -1,0 +1,83 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Geospatial data & outputs ---
+# Raster formats
+*.tif
+*.tiff
+*.img
+*.jp2
+*.ecw
+*.hdf
+*.nc
+
+# Shapefile family (keep sample/test fixtures out of this rule if needed)
+*.shp
+*.shx
+*.dbf
+*.prj
+*.sbn
+*.sbx
+*.cpg
+*.qix
+
+# Other common GIS/vector formats
+*.gpkg
+*.geojson
+*.kml
+*.kmz
+
+# Generated map layouts / exports
+/output/
+/exports/
+*.pdf
+!docs/**/*.pdf
+
+# Large or generated data directories
+/data/raw/
+/data/processed/
+*.zip
+*.tar.gz
+
+# GDAL/PROJ cache
+.gdal_cache/
+proj.db
