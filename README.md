@@ -46,8 +46,19 @@ salida y nunca sobrescriben un archivo existente sin confirmación.
 
 ## Instalación
 
-Requiere Python 3.9+ y las librerías de sistema de GDAL instaladas (las
-necesitan `rasterio` y `geopandas`/`fiona`).
+Requiere **Python 3.11 o 3.12, de 64 bits** (no 32 bits, no versiones más
+nuevas como 3.13/3.14 todavía). `rasterio` y `geopandas` dependen de GDAL, y
+GDAL solo publica wheels precompilados de Windows para 64 bits y para un
+rango limitado de versiones de Python — si usas Python de 32 bits o una
+versión demasiado nueva, `pip install` va a intentar compilar los paquetes
+desde el código fuente y va a fallar (por ejemplo, con errores de Meson/Cython
+al instalar `pandas`, o directamente sin encontrar `rasterio`).
+
+Para verificar que tu Python es de 64 bits:
+
+```powershell
+python -c "import sys; print(sys.maxsize > 2**32)"   # debe imprimir True
+```
 
 ```bash
 git clone <url-del-repo>
@@ -56,6 +67,7 @@ cd Topo-Map-App
 python -m venv .venv
 source .venv/bin/activate      # En Windows: .venv\Scripts\activate
 
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
